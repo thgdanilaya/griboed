@@ -24,23 +24,23 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          cache: pip
+
+      - name: Install Poetry
+        run: python -m pip install poetry==2.2.1
+
+      - name: Cache Poetry environment
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: ${{ runner.os }}-python-3.11-poetry-2.2.1-${{ hashFiles('poetry.lock') }}
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install -r requirements.txt
+          poetry check --lock
+          poetry sync --with dev --no-interaction
 
-      - name: Check Python syntax
-        run: |
-          python -m py_compile \
-            src/api/app.py \
-            src/data/prepare_dataset.py \
-            src/training/train_baseline.py \
-            tests/conftest.py \
-            tests/test_api.py \
-            tests/test_prepare_dataset.py \
-            tests/test_train_baseline.py
+      - name: Check code and repository hygiene
+        run: poetry run pre-commit run --all-files --show-diff-on-failure
 
       - name: Run tests
-        run: python -m pytest tests -q
+        run: poetry run pytest -q

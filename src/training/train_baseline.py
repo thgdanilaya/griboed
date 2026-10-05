@@ -24,7 +24,6 @@ from torch import nn
 from torch.utils.data import DataLoader
 from torchvision import datasets, models, transforms
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_DATA_DIR = PROJECT_ROOT / "data" / "processed"
 DEFAULT_REPORT_DIR = PROJECT_ROOT / "reports" / "baseline"
@@ -52,7 +51,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--data-dir", type=Path, default=DEFAULT_DATA_DIR)
     parser.add_argument("--report-dir", type=Path, default=DEFAULT_REPORT_DIR)
     parser.add_argument("--model-dir", type=Path, default=DEFAULT_MODEL_DIR)
-    parser.add_argument("--model-name", choices=("resnet18", "mobilenet_v3_small"), default="resnet18")
+    parser.add_argument(
+        "--model-name", choices=("resnet18", "mobilenet_v3_small"), default="resnet18"
+    )
     parser.add_argument("--epochs", type=int, default=20)
     parser.add_argument("--batch-size", type=int, default=32)
     parser.add_argument("--learning-rate", type=float, default=3e-4)
@@ -141,8 +142,7 @@ def build_dataloaders(
 
     if datasets_by_split["train"].classes != CLASS_NAMES:
         raise ValueError(
-            f"Unexpected class order: {datasets_by_split['train'].classes}. "
-            f"Expected: {CLASS_NAMES}"
+            f"Unexpected class order: {datasets_by_split['train'].classes}. Expected: {CLASS_NAMES}"
         )
 
     dataloaders = {
@@ -264,7 +264,9 @@ def evaluate(
     return {
         "loss": running_loss / len(loader.dataset),
         "accuracy": accuracy_score(targets, predictions),
-        "precision": precision_score(targets, predictions, pos_label=POSITIVE_CLASS, zero_division=0),
+        "precision": precision_score(
+            targets, predictions, pos_label=POSITIVE_CLASS, zero_division=0
+        ),
         "recall": recall_score(targets, predictions, pos_label=POSITIVE_CLASS, zero_division=0),
         "f1": f1_score(targets, predictions, pos_label=POSITIVE_CLASS, zero_division=0),
         "roc_auc": roc_auc,
@@ -396,8 +398,7 @@ def main() -> None:
 
     if not args.data_dir.exists():
         raise FileNotFoundError(
-            f"Processed dataset not found: {args.data_dir}. "
-            "Run src/data/prepare_dataset.py first."
+            f"Processed dataset not found: {args.data_dir}. Run src/data/prepare_dataset.py first."
         )
 
     set_seed(args.seed)
@@ -411,10 +412,7 @@ def main() -> None:
         batch_size=args.batch_size,
         num_workers=args.num_workers,
     )
-    dataset_sizes = {
-        split: len(dataset)
-        for split, dataset in datasets_by_split.items()
-    }
+    dataset_sizes = {split: len(dataset) for split, dataset in datasets_by_split.items()}
 
     model = build_model(
         model_name=args.model_name,
@@ -486,8 +484,7 @@ def main() -> None:
             best_epoch = epoch
             epochs_without_improvement = 0
             best_state = {
-                key: value.detach().cpu().clone()
-                for key, value in model.state_dict().items()
+                key: value.detach().cpu().clone() for key, value in model.state_dict().items()
             }
         else:
             epochs_without_improvement += 1

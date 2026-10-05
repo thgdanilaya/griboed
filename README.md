@@ -7,9 +7,10 @@ ML-проект для бинарной классификации изобра�
 
 Проект является учебным и демонстрационным. Модель не должна использоваться для принятия реальных решений о безопасности употребления грибов в пищу.
 ## Участники
-Работу выполняла команда:   
-Друхольский Александр Константинович (ssForz) - ML, backend   
-Казанцев Данила Игоревич (thgdanilaya) - DA, CI/CD   
+Работу выполняла команда:
+
+- Друхольский Александр Константинович (ssForz) — ML, backend.
+- Казанцев Данила Игоревич (thgdanilaya) — DA, CI/CD.
 
 ## Бизнес-задача
 
@@ -71,13 +72,13 @@ Preprocessing изображений
 Команда для сухой проверки без записи файлов:
 
 ```powershell
-.\.venv\Scripts\python.exe src\data\prepare_dataset.py --dry-run
+poetry run python src\data\prepare_dataset.py --dry-run
 ```
 
 Команда для создания обработанного датасета:
 
 ```powershell
-.\.venv\Scripts\python.exe src\data\prepare_dataset.py --overwrite
+poetry run python src\data\prepare_dataset.py --overwrite
 ```
 
 После preprocessing структура данных:
@@ -151,13 +152,13 @@ EDA покрывает:
 Команда запуска:
 
 ```powershell
-.\.venv\Scripts\python.exe src\training\train_baseline.py
+poetry run python src\training\train_baseline.py
 ```
 
 Для эксперимента с ImageNet-весами:
 
 ```powershell
-.\.venv\Scripts\python.exe src\training\train_baseline.py --pretrained --epochs 20 --learning-rate 0.0001
+poetry run python src\training\train_baseline.py --pretrained --epochs 20 --learning-rate 0.0001
 ```
 
 ## Результаты baseline
@@ -223,31 +224,90 @@ weighted avg       0.90      0.90      0.90       282
 
 ## Установка и запуск
 
-Создание окружения:
+Требуется Python 3.11 или 3.12. Ниже приведён пример для Windows с Python 3.11.
+Poetry 2.2.1 устанавливается отдельно от окружения проекта; команда `poetry`
+должна быть доступна в PATH (обычно `%APPDATA%\Python\Python311\Scripts`).
+Если выбран Python 3.12, замените `3.11` на `3.12` в первых двух командах.
+
+Создание окружения и подключение Git-хуков:
 
 ```powershell
-python -m venv .venv
-.\.venv\Scripts\activate
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
+py -3.11 -m pip install --user poetry==2.2.1
+poetry env use 3.11
+poetry sync --with dev
+poetry run pre-commit install
+poetry run pre-commit run --all-files
 ```
+
+На Linux/macOS установите Poetry через `python3.11 -m pip install --user poetry==2.2.1`,
+затем выполните те же команды `poetry`. Активация окружения не требуется:
+`poetry run` автоматически использует интерпретатор проекта.
+
+### Poetry, линтеры и виртуальное окружение в Git
+
+В Git хранятся `pyproject.toml` (зависимости и настройки проверок), `poetry.lock`
+(точные версии и хеши пакетов), `poetry.toml` (создание окружения в проекте)
+и `.pre-commit-config.yaml` (проверки перед коммитом). Сама папка `.venv/`
+исключена через `.gitignore`: после клонирования её воспроизводит `poetry sync`.
+Исходные данные, веса моделей, секреты и кеши также остаются локальными.
+
+Основные зависимости отделены от группы `dev`, куда входят pytest, HTTP-клиент
+для API-тестов, Ruff и pre-commit. Совместимая пара PyTorch/torchvision зафиксирована.
+Production-зависимости устанавливаются командой `poetry sync --only main`;
+для разработки используйте `poetry sync --with dev`.
+
+Ruff проверяет синтаксические ошибки, неиспользуемые импорты, порядок импортов,
+типичные ошибки Python и совместимость с Python 3.11. Он также форматирует код:
+
+```powershell
+poetry check --lock
+poetry run ruff check .
+poetry run ruff format --check .
+poetry run pytest -q
+```
+
+Для автоматического исправления выполните `poetry run ruff check . --fix`
+и `poetry run ruff format .`. Pre-commit запускает эти проверки при `git commit`,
+а также проверяет YAML/TOML, конфликты слияния, приватные ключи и файлы более 1 МБ.
+После исправления файлов добавьте изменения через `git add` и повторите коммит.
+Хуки создают отдельные служебные окружения с зафиксированными версиями инструментов.
+При первом запуске нужен доступ к GitHub и PyPI; версии Ruff в хуках и Poetry совпадают.
+Установка хука выполняется отдельно в каждом клоне; CI запускает проверки
+независимо от наличия локального хука.
+
+Добавление и обновление зависимостей:
+
+```powershell
+poetry add package-name
+poetry add --group dev package-name
+poetry update package-name
+```
+
+Коммитьте `pyproject.toml` и `poetry.lock` вместе. В PyCharm выберите существующий
+интерпретатор `<папка проекта>\.venv\Scripts\python.exe`
+(на Linux/macOS — `<папка проекта>/.venv/bin/python`).
+
+Если существующее окружение не запускается или использует неподдерживаемый Python,
+закройте процессы, использующие его, переименуйте `.venv` в `.venv.previous`,
+затем выполните `poetry env use 3.11`, `poetry sync --with dev` и
+`poetry run pre-commit install`. Резервная папка также исключена из Git.
 
 Подготовка данных:
 
 ```powershell
-.\.venv\Scripts\python.exe src\data\prepare_dataset.py --overwrite
+poetry run python src\data\prepare_dataset.py --overwrite
 ```
 
 Обучение baseline:
 
 ```powershell
-.\.venv\Scripts\python.exe src\training\train_baseline.py
+poetry run python src\training\train_baseline.py
 ```
 
 Запуск FastAPI-сервиса локально:
 
 ```powershell
-.\.venv\Scripts\uvicorn.exe src.api.app:app --host 0.0.0.0 --port 8000
+poetry run uvicorn src.api.app:app --host 0.0.0.0 --port 8000
 ```
 
 Основные endpoint'ы сервиса:
@@ -290,12 +350,12 @@ curl.exe "http://localhost:8000/monitoring"
 Команда запуска из корня проекта:
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest tests -q
+poetry run pytest -q
 ```
 
 ## Docker
 
-Контейнеризация реализована через [Dockerfile](Dockerfile) и [docker-compose.yml](docker-compose.yml). Основной способ запуска сервиса — Docker Compose. В образ копируются только код, тесты, README и зависимости. Локальные данные, модели, отчёты, `.venv` и служебные файлы исключены через [.dockerignore](.dockerignore).
+Контейнеризация реализована через [Dockerfile](Dockerfile) и [docker-compose.yml](docker-compose.yml). Основной способ запуска сервиса — Docker Compose. В production-образ копируются код, README и основные зависимости из `poetry.lock`. Для тестов используется отдельная стадия `test` с dev-зависимостями. Локальные данные, модели, отчёты, `.venv` и служебные файлы исключены через [.dockerignore](.dockerignore).
 
 Сборка образа:
 
@@ -336,6 +396,36 @@ docker compose --profile tools run --rm train
 
 ## CI/CD
 
+Для GitLab добавлен [.gitlab-ci.yml](.gitlab-ci.yml). Pipeline запускается при push
+и для merge request; при открытом merge request повторный branch pipeline пропускается.
+Job использует Linux-образ Python 3.11, устанавливает Poetry 2.2.1 и зависимости
+из lock-файла, запускает pre-commit, Ruff и pytest. Результаты pytest публикуются
+как JUnit-отчёт. Нужен Linux Runner с Docker/Kubernetes executor,
+разрешающий задания без тегов, и доступ к PyPI и GitHub для загрузки зависимостей.
+Локальное `.venv` в GitLab не передаётся: CI создаёт собственное окружение.
+
+Для текущей локальной установки Poetry в `.tools` можно выполнить в PowerShell:
+
+```powershell
+Set-Alias poetry (Resolve-Path .\.tools\Scripts\poetry.exe)
+poetry sync --with dev
+poetry check --lock
+poetry run ruff check .
+poetry run ruff format --check .
+poetry run pytest -q
+poetry run pre-commit install
+git add .
+poetry run pre-commit run --all-files
+```
+
+Если pre-commit исправил файлы, повторите `git add .` и проверку.
+Перед коммитом просмотрите `git diff --cached`.
+Проверьте `git remote -v`: `origin` может указывать на GitHub.
+Для отдельного GitLab-репозитория добавьте remote командой
+`git remote add gitlab <URL-вашего-GitLab-репозитория>` и отправьте текущую ветку
+через `git push -u gitlab HEAD`. После push откройте Build → Pipelines в GitLab.
+Если задание ожидает Runner, проверьте Settings → CI/CD → Runners.
+
 Непрерывная интеграция настроена через GitHub Actions: [.github/workflows/ci.yml](.github/workflows/ci.yml).
 
 Workflow запускается при:
@@ -348,12 +438,12 @@ CI выполняет:
 
 - checkout репозитория;
 - установку Python `3.11`;
-- установку зависимостей из `requirements.txt`;
-- синтаксическую проверку ключевых Python-файлов через `py_compile`;
+- проверку `pyproject.toml` и `poetry.lock`, установку зависимостей через `poetry sync --with dev`;
+- запуск pre-commit: Ruff, форматирование, проверка YAML/TOML, конфликтов, ключей и крупных файлов;
 - запуск тестов:
 
 ```bash
-python -m pytest tests -q
+poetry run pytest -q
 ```
 
 Основные git-команды для доставки изменений:
@@ -400,7 +490,10 @@ git push origin main
 ├── .gitignore
 ├── Dockerfile
 ├── docker-compose.yml
-├── requirements.txt
+├── pyproject.toml
+├── poetry.lock
+├── poetry.toml
+├── .pre-commit-config.yaml
 └── README.md
 ```
 

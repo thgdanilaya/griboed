@@ -1,0 +1,50 @@
+[project]
+name = "mushroom-edibility-classifier"
+version = "0.1.0"
+description = "Mushroom image classification training pipeline and FastAPI service"
+requires-python = ">=3.11,<3.13"
+dynamic = ["dependencies"]
+
+[tool.poetry]
+package-mode = false
+
+[tool.poetry.dependencies]
+python = ">=3.11,<3.13"
+pandas = ">=2.2,<3"
+numpy = ">=2.0,<3"
+matplotlib = ">=3.9,<4"
+seaborn = ">=0.13,<0.14"
+pillow = ">=11,<12"
+scikit-learn = ">=1.5,<2"
+tqdm = ">=4.66,<5"
+torch = "2.8.0"
+torchvision = "0.23.0"
+fastapi = ">=0.115,<1"
+uvicorn = { version = ">=0.30,<1", extras = ["standard"] }
+python-multipart = ">=0.0.20,<0.1"
+psutil = ">=7,<8"
+
+[tool.poetry.group.dev.dependencies]
+pytest = ">=8.3,<9"
+httpx2 = ">=2.13,<3"
+ruff = "0.13.3"
+pre-commit = "4.3.0"
+pre-commit-hooks = "5.0.0"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+extend-exclude = [".tools", ".cache", ".venv.previous", "data", "models", "reports", "notebooks"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I", "B", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+"src/api/app.py" = ["B008"] # FastAPI File(...) declares a request parameter.
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

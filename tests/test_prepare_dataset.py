@@ -102,9 +102,48 @@ def test_write_metadata_counts_classes_and_cross_split_duplicates(tmp_path: Path
     output_dir.mkdir()
 
     records = [
-        ImageRecord("train", "edible", "edible", 0, "A", "train_a.jpg", "out_1.jpg", 10, 10, "RGB", "JPEG", "hash_a"),
-        ImageRecord("val", "edible", "edible", 0, "A", "val_a.jpg", "out_2.jpg", 10, 10, "RGB", "JPEG", "hash_a"),
-        ImageRecord("test", "poisonous", "non_edible", 1, "B", "test_b.jpg", "out_3.jpg", 10, 10, "RGB", "JPEG", "hash_b"),
+        ImageRecord(
+            "train",
+            "edible",
+            "edible",
+            0,
+            "A",
+            "train_a.jpg",
+            "out_1.jpg",
+            10,
+            10,
+            "RGB",
+            "JPEG",
+            "hash_a",
+        ),
+        ImageRecord(
+            "val",
+            "edible",
+            "edible",
+            0,
+            "A",
+            "val_a.jpg",
+            "out_2.jpg",
+            10,
+            10,
+            "RGB",
+            "JPEG",
+            "hash_a",
+        ),
+        ImageRecord(
+            "test",
+            "poisonous",
+            "non_edible",
+            1,
+            "B",
+            "test_b.jpg",
+            "out_3.jpg",
+            10,
+            10,
+            "RGB",
+            "JPEG",
+            "hash_b",
+        ),
     ]
 
     write_metadata(

@@ -3,7 +3,6 @@ from pathlib import Path
 import pytest
 from PIL import Image
 
-
 torch = pytest.importorskip("torch")
 pytest.importorskip("torchvision")
 
@@ -54,9 +53,7 @@ def test_build_model_can_freeze_resnet_backbone() -> None:
     )
 
     trainable_names = [
-        name
-        for name, parameter in model.named_parameters()
-        if parameter.requires_grad
+        name for name, parameter in model.named_parameters() if parameter.requires_grad
     ]
 
     assert trainable_names == ["fc.weight", "fc.bias"]

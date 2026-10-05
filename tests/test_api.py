@@ -1,6 +1,5 @@
 import pytest
 
-
 pytest.importorskip("fastapi")
 pytest.importorskip("torch")
 pytest.importorskip("torchvision")
@@ -8,7 +7,6 @@ pytest.importorskip("torchvision")
 from fastapi.testclient import TestClient  # noqa: E402
 
 from src.api.app import app  # noqa: E402
-
 
 client = TestClient(app)
 
@@ -42,4 +40,6 @@ def test_monitoring_returns_service_and_model_state() -> None:
     assert "infrastructure" in payload
     assert "metrics" in payload
     assert isinstance(payload["model"]["loaded"], bool)
-    assert {"accuracy", "precision", "recall", "f1", "roc_auc", "roc-auc"} <= set(payload["metrics"])
+    assert {"accuracy", "precision", "recall", "f1", "roc_auc", "roc-auc"} <= set(
+        payload["metrics"]
+    )

@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.11-slim AS base
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -14,17 +14,29 @@ RUN apt-get update \
         libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
+ARG POETRY_VERSION=2.2.1
 
-RUN python -m pip install --upgrade pip \
-    && python -m pip install -r requirements.txt
+COPY pyproject.toml poetry.lock ./
+
+RUN python -m pip install "poetry==${POETRY_VERSION}" \
+    && POETRY_VIRTUALENVS_CREATE=false poetry install --only main --no-interaction --no-ansi
 
 COPY README.md .
 COPY src ./src
-COPY tests ./tests
 
 RUN useradd --create-home --shell /bin/bash appuser \
     && chown -R appuser:appuser /app
+
+FROM base AS test
+
+RUN POETRY_VIRTUALENVS_CREATE=false poetry install --with dev --no-interaction --no-ansi
+COPY tests ./tests
+
+USER appuser
+
+CMD ["python", "-m", "pytest", "-q"]
+
+FROM base AS production
 
 USER appuser
 

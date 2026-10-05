@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import os
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from time import perf_counter
 from typing import Any
@@ -15,7 +15,6 @@ from fastapi.responses import HTMLResponse
 from PIL import Image, UnidentifiedImageError
 
 from src.training.train_baseline import CLASS_NAMES, build_model, build_transforms
-
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_MODEL_PATH = PROJECT_ROOT / "models" / "baseline_resnet18.pt"
@@ -545,7 +544,7 @@ class ServiceState:
     total_prediction_latency_seconds: float = 0.0
 
 
-state = ServiceState(started_at=datetime.now(timezone.utc))
+state = ServiceState(started_at=datetime.now(UTC))
 app = FastAPI(
     title="Mushroom Edibility Classifier",
     description="FastAPI service for binary mushroom image classification.",
@@ -730,7 +729,7 @@ def predict(file: UploadFile = File(...)) -> dict[str, Any]:
             "confidence": confidence,
             "probabilities": {
                 class_name: float(probability)
-                for class_name, probability in zip(CLASS_NAMES, probabilities)
+                for class_name, probability in zip(CLASS_NAMES, probabilities, strict=False)
             },
             "latency_seconds": latency,
             "model": MODEL_METADATA,
@@ -745,7 +744,7 @@ def predict(file: UploadFile = File(...)) -> dict[str, Any]:
 
 @app.get("/monitoring")
 def monitoring() -> dict[str, Any]:
-    uptime_seconds = (datetime.now(timezone.utc) - state.started_at).total_seconds()
+    uptime_seconds = (datetime.now(UTC) - state.started_at).total_seconds()
     successful_predictions = max(0, state.prediction_requests - state.prediction_errors)
     average_latency = (
         state.total_prediction_latency_seconds / successful_predictions

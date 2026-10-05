@@ -1,0 +1,48 @@
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS && $CI_PIPELINE_SOURCE == "push"'
+      when: never
+    - if: '$CI_COMMIT_BRANCH'
+    - if: '$CI_COMMIT_TAG'
+
+stages:
+  - check
+
+quality-and-tests:
+  stage: check
+  image: python:3.11
+  variables:
+    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+    POETRY_CACHE_DIR: "$CI_PROJECT_DIR/.cache/poetry"
+    PRE_COMMIT_HOME: "$CI_PROJECT_DIR/.cache/pre-commit"
+    POETRY_VIRTUALENVS_IN_PROJECT: "true"
+    POETRY_KEYRING_ENABLED: "false"
+    MPLBACKEND: Agg
+    DEVICE: cpu
+  cache:
+    key:
+      prefix: python-3.11-poetry-2.2.1
+      files:
+        - poetry.lock
+        - .pre-commit-config.yaml
+    paths:
+      - .cache/pip/
+      - .cache/poetry/
+      - .cache/pre-commit/
+  before_script:
+    - python -m pip install poetry==2.2.1
+    - poetry check --lock
+    - poetry sync --with dev --no-interaction
+  script:
+    - poetry run pre-commit run --all-files --show-diff-on-failure
+    - poetry run ruff check .
+    - poetry run ruff format --check .
+    - poetry run pytest -q --junitxml=reports/ci/pytest.xml
+  artifacts:
+    when: always
+    reports:
+      junit: reports/ci/pytest.xml
+    paths:
+      - reports/ci/pytest.xml
+    expire_in: 1 week
