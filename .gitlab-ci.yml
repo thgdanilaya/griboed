@@ -7,10 +7,10 @@ workflow:
     - if: '$CI_COMMIT_TAG'
 
 stages:
-  - check
+  - lint
+  - test
 
-quality-and-tests:
-  stage: check
+.python-job:
   image: python:3.11
   variables:
     PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
@@ -22,7 +22,7 @@ quality-and-tests:
     DEVICE: cpu
   cache:
     key:
-      prefix: python-3.11-poetry-2.2.1
+      prefix: "$CI_JOB_NAME-python-3.11-poetry-2.2.1"
       files:
         - poetry.lock
         - .pre-commit-config.yaml
@@ -33,11 +33,21 @@ quality-and-tests:
   before_script:
     - python -m pip install poetry==2.2.1
     - poetry check --lock
-    - poetry sync --with dev --no-interaction
+
+lint:
+  extends: .python-job
+  stage: lint
   script:
+    - poetry sync --only dev --no-interaction
     - poetry run pre-commit run --all-files --show-diff-on-failure
     - poetry run ruff check .
     - poetry run ruff format --check .
+
+tests:
+  extends: .python-job
+  stage: test
+  script:
+    - poetry sync --with dev --no-interaction
     - poetry run pytest -q --junitxml=reports/ci/pytest.xml
   artifacts:
     when: always

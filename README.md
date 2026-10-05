@@ -398,11 +398,15 @@ docker compose --profile tools run --rm train
 
 Для GitLab добавлен [.gitlab-ci.yml](.gitlab-ci.yml). Pipeline запускается при push
 и для merge request; при открытом merge request повторный branch pipeline пропускается.
-Job использует Linux-образ Python 3.11, устанавливает Poetry 2.2.1 и зависимости
-из lock-файла, запускает pre-commit, Ruff и pytest. Результаты pytest публикуются
+Pipeline состоит из двух jobs: `lint` проверяет pre-commit и Ruff, затем `tests`
+запускает pytest. Если `lint` завершился с ошибкой, `tests` не запускается.
+Оба jobs используют Linux-образ Python 3.11 и Poetry 2.2.1; зависимости берутся
+из lock-файла. `lint` устанавливает только группу `dev`, без тяжёлых ML-библиотек,
+а `tests` — основные и dev-зависимости. Результаты pytest публикуются
 как JUnit-отчёт. Нужен Linux Runner с Docker/Kubernetes executor,
 разрешающий задания без тегов, и доступ к PyPI и GitHub для загрузки зависимостей.
 Локальное `.venv` в GitLab не передаётся: CI создаёт собственное окружение.
+
 
 Для текущей локальной установки Poetry в `.tools` можно выполнить в PowerShell:
 
